@@ -1,10 +1,11 @@
-{% from "erpnext/templates/includes/cart/cart_macros.html" import show_address %}
+{% from "erpnext/templates/includes/cart/cart_macros.html"
+    import show_address %}
 <div class="row">
 	{% if addresses|length == 1%}
 		{% set select_address = True %}
 	{% endif %}
 	<div class="col-sm-6">
-		<div class="h6 text-uppercase">{{ _("Shipping Address") }}</div>
+		<h4>{{ _("Shipping Address") }}</h4>
 		<div id="cart-shipping-address" class="panel-group"
 			data-fieldname="shipping_address_name">
             {% for address in addresses %}
@@ -15,7 +16,7 @@
 			{{ _("Manage Addresses") }}</a>
 	</div>
 	<div class="col-sm-6">
-		<div class="h6 text-uppercase">Billing Address</div>
+		<h4>Billing Address</h4>
 		<div id="cart-billing-address" class="panel-group"
 			data-fieldname="customer_address">
             {% for address in addresses %}

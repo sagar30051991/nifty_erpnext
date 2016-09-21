@@ -14,11 +14,6 @@ def get_data():
 				},
 				{
 					"type": "doctype",
-					"name": "Request for Quotation",
-					"description": _("Request for quotation."),
-				},
-				{
-					"type": "doctype",
 					"name": "Supplier Quotation",
 					"description": _("Quotations received from Suppliers."),
 				},
@@ -96,12 +91,13 @@ def get_data():
 					"description": _("Price List master.")
 				},
 				{
-					"type": "doctype",
-					"name": "Item Group",
+					"type": "page",
+					"name": "Sales Browser",
 					"icon": "icon-sitemap",
 					"label": _("Item Group"),
-					"link": "Tree/Item Group",
+					"link": "Sales Browser/Item Group",
 					"description": _("Tree of Item Groups."),
+					"doctype": "Item Group",
 				},
 				{
 					"type": "doctype",

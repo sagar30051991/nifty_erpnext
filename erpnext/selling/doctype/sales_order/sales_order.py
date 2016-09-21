@@ -21,9 +21,6 @@ form_grid_templates = {
 class WarehouseRequired(frappe.ValidationError): pass
 
 class SalesOrder(SellingController):
-	def __init__(self, arg1, arg2=None):
-		super(SalesOrder, self).__init__(arg1, arg2)
-
 	def validate(self):
 		super(SalesOrder, self).validate()
 
@@ -156,7 +153,7 @@ class SalesOrder(SellingController):
 		self.check_credit_limit()
 		self.update_reserved_qty()
 
-		frappe.get_doc('Authorization Control').validate_approving_authority(self.doctype, self.company, self.base_grand_total, self)
+		frappe.get_doc('Authorization Control').validate_approving_authority(self.doctype, self.base_grand_total, self)
 
 		self.update_prevdoc_status('submit')
 
@@ -275,7 +272,8 @@ class SalesOrder(SellingController):
 			if item.delivered_by_supplier:
 				item_delivered_qty  = frappe.db.sql("""select sum(qty)
 					from `tabPurchase Order Item` poi, `tabPurchase Order` po
-					where poi.sales_order_item = %s
+					where poi.prevdoc_detail_docname = %s
+						and poi.prevdoc_doctype = 'Sales Order'
 						and poi.item_code = %s
 						and poi.parent = po.name
 						and po.docstatus = 1
@@ -287,8 +285,8 @@ class SalesOrder(SellingController):
 			delivered_qty += item.delivered_qty
 			tot_qty += item.qty
 
-		self.db_set("per_delivered", flt(delivered_qty/tot_qty) * 100,
-			update_modified=False)
+		frappe.db.set_value("Sales Order", self.name, "per_delivered", flt(delivered_qty/tot_qty) * 100,
+		update_modified=False)
 
 	def set_indicator(self):
 		"""Set indicator for portal"""
@@ -312,13 +310,8 @@ class SalesOrder(SellingController):
 def get_list_context(context=None):
 	from erpnext.controllers.website_list_for_contact import get_list_context
 	list_context = get_list_context(context)
-	list_context.update({
-		'show_sidebar': True,
-		'show_search': True,
-		'no_breadcrumbs': True,
-		'title': _('Orders'),
-	})
-
+	list_context["title"] = _("My Orders")
+	list_context["parents"] = [{"title": _("My Account"), "name": "me"}]
 	return list_context
 
 @frappe.whitelist()
@@ -344,8 +337,9 @@ def make_material_request(source_name, target_doc=None):
 	def postprocess(source, doc):
 		doc.material_request_type = "Purchase"
 
-	def update_item(source, target, source_parent):
-		target.project = source_parent.project
+	so = frappe.get_doc("Sales Order", source_name)
+
+	item_table = "Packed Item" if so.packed_items else "Sales Order Item"
 
 	doc = get_mapped_doc("Sales Order", source_name, {
 		"Sales Order": {
@@ -354,22 +348,12 @@ def make_material_request(source_name, target_doc=None):
 				"docstatus": ["=", 1]
 			}
 		},
-		"Packed Item": {
+		item_table: {
 			"doctype": "Material Request Item",
 			"field_map": {
 				"parent": "sales_order",
 				"stock_uom": "uom"
-			},
-			"postprocess": update_item
-		},
-		"Sales Order Item": {
-			"doctype": "Material Request Item",
-			"field_map": {
-				"parent": "sales_order",
-				"stock_uom": "uom"
-			},
-			"condition": lambda doc: not frappe.db.exists('Product Bundle', doc.item_code),
-			"postprocess": update_item
+			}
 		}
 	}, target_doc, postprocess)
 
@@ -429,7 +413,7 @@ def make_sales_invoice(source_name, target_doc=None, ignore_permissions=False):
 	def postprocess(source, target):
 		set_missing_values(source, target)
 		#Get the advance paid Journal Entries in Sales Invoice Advance
-		target.set_advances()
+		target.get_advances()
 
 	def set_missing_values(source, target):
 		target.is_pos = 0
@@ -599,8 +583,9 @@ def make_purchase_order_for_drop_shipment(source_name, for_supplier, target_doc=
 		"Sales Order Item": {
 			"doctype": "Purchase Order Item",
 			"field_map":  [
-				["name", "sales_order_item"],
-				["parent", "sales_order"],
+				["name", "prevdoc_detail_docname"],
+				["parent", "prevdoc_docname"],
+				["parenttype", "prevdoc_doctype"],
 				["uom", "stock_uom"],
 				["delivery_date", "schedule_date"]
 			],

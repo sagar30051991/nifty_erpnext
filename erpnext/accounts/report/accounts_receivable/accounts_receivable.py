@@ -16,10 +16,7 @@ class ReceivablePayableReport(object):
 
 	def run(self, args):
 		party_naming_by = frappe.db.get_value(args.get("naming_by")[0], None, args.get("naming_by")[1])
-		columns = self.get_columns(party_naming_by, args)
-		data = self.get_data(party_naming_by, args)
-		chart = self.get_chart_data(columns, data)
-		return columns, data, None, chart
+		return self.get_columns(party_naming_by, args), self.get_data(party_naming_by, args)
 
 	def get_columns(self, party_naming_by, args):
 		columns = [_("Posting Date") + ":Date:80", _(args.get("party_type")) + ":Link/" + args.get("party_type") + ":200"]
@@ -42,8 +39,6 @@ class ReceivablePayableReport(object):
 			})
 
 		columns += [_("Age (Days)") + ":Int:80"]
-		
-		self.ageing_col_idx_start = len(columns)
 
 		if not "range1" in self.filters:
 			self.filters["range1"] = "30"
@@ -51,11 +46,11 @@ class ReceivablePayableReport(object):
 			self.filters["range2"] = "60"
 		if not "range3" in self.filters:
 			self.filters["range3"] = "90"
-			
-		for label in ("0-{range1}".format(range1=self.filters["range1"]),
-			"{range1}-{range2}".format(range1=cint(self.filters["range1"])+ 1, range2=self.filters["range2"]),
-			"{range2}-{range3}".format(range2=cint(self.filters["range2"])+ 1, range3=self.filters["range3"]),
-			"{range3}-{above}".format(range3=cint(self.filters["range3"])+ 1, above=_("Above"))):
+
+		for label in ("0-{range1}".format(**self.filters),
+			"{range1}-{range2}".format(**self.filters),
+			"{range2}-{range3}".format(**self.filters),
+			"{range3}-{above}".format(range3=self.filters.range3, above=_("Above"))):
 				columns.append({
 					"label": label,
 					"fieldtype": "Currency",
@@ -66,8 +61,7 @@ class ReceivablePayableReport(object):
 		columns.append({
 			"fieldname": "currency",
 			"label": _("Currency"),
-			"fieldtype": "Link",
-			"options": "Currency",
+			"fieldtype": "Data",
 			"width": 100
 		})
 		if args.get("party_type") == "Customer":
@@ -256,23 +250,6 @@ class ReceivablePayableReport(object):
 		return self.gl_entries_map.get(party, {})\
 			.get(against_voucher_type, {})\
 			.get(against_voucher, [])
-			
-	def get_chart_data(self, columns, data):
-		ageing_columns = columns[self.ageing_col_idx_start : self.ageing_col_idx_start+4]
-		
-		rows = []
-		for d in data:
-			rows.append(d[self.ageing_col_idx_start : self.ageing_col_idx_start+4])
-
-		if rows:
-			rows.insert(0, [[d.get("label")] for d in ageing_columns])
-		
-		return {
-			"data": {
-				'rows': rows
-			},
-			"chart_type": 'pie'
-		}
 
 def execute(filters=None):
 	args = {

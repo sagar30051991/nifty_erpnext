@@ -24,7 +24,7 @@ def set_cart_count(quotation=None):
 
 @frappe.whitelist()
 def get_cart_quotation(doc=None):
-	party = get_party()
+	party = get_customer()
 
 	if not doc:
 		quotation = _get_cart_quotation(party)
@@ -92,9 +92,8 @@ def update_cart(item_code, qty, with_items=False):
 
 	set_cart_count(quotation)
 
-	context = get_cart_quotation(quotation)
-
-	if cint(with_items):
+	if with_items:
+		context = get_cart_quotation(quotation)
 		return {
 			"items": frappe.render_template("templates/includes/cart/cart_items.html",
 				context),
@@ -102,17 +101,7 @@ def update_cart(item_code, qty, with_items=False):
 				context),
 		}
 	else:
-		return {
-			'name': quotation.name,
-			'shopping_cart_menu': get_shopping_cart_menu(context)
-		}
-
-@frappe.whitelist()
-def get_shopping_cart_menu(context=None):
-	if not context:
-		context = get_cart_quotation()
-
-	return frappe.render_template('templates/includes/cart/cart_dropdown.html', context)
+		return quotation.name
 
 @frappe.whitelist()
 def update_cart_address(address_fieldname, address_name):
@@ -155,13 +144,13 @@ def guess_territory():
 def decorate_quotation_doc(doc):
 	for d in doc.get("items", []):
 		d.update(frappe.db.get_value("Item", d.item_code,
-			["thumbnail", "website_image", "description", "route"], as_dict=True))
+			["thumbnail", "website_image", "description", "page_name"], as_dict=True))
 
 	return doc
 
 def _get_cart_quotation(party=None):
 	if not party:
-		party = get_party()
+		party = get_customer()
 
 	quotation = frappe.get_all("Quotation", fields=["name"], filters=
 		{party.doctype.lower(): party.name, "order_type": "Shopping Cart", "docstatus": 0},
@@ -193,7 +182,7 @@ def _get_cart_quotation(party=None):
 	return qdoc
 
 def update_party(fullname, company_name=None, mobile_no=None, phone=None):
-	party = get_party()
+	party = get_customer()
 
 	party.customer_name = company_name or fullname
 	party.customer_type == "Company" if company_name else "Individual"
@@ -222,7 +211,7 @@ def update_party(fullname, company_name=None, mobile_no=None, phone=None):
 
 def apply_cart_settings(party=None, quotation=None):
 	if not party:
-		party = get_party()
+		party = get_customer()
 	if not quotation:
 		quotation = _get_cart_quotation(party)
 
@@ -287,28 +276,22 @@ def set_taxes(quotation, cart_settings):
 # 	# append taxes
 	quotation.append_taxes_from_master()
 
-def get_party(user=None):
+def get_customer(user=None):
 	if not user:
 		user = frappe.session.user
 
-	party = frappe.db.get_value("Contact", {"email_id": user}, ["customer", "supplier"], as_dict=1)
-	if party:
-		party_doctype = 'Customer' if party.customer else 'Supplier'
-		party = party.customer or party.supplier
-
+	customer = frappe.db.get_value("Contact", {"email_id": user}, "customer")
 	cart_settings = frappe.get_doc("Shopping Cart Settings")
-
+	
 	debtors_account = ''
-
+	
 	if cart_settings.enable_checkout:
 		debtors_account = get_debtors_account(cart_settings)
-
-	if party:
-		return frappe.get_doc(party_doctype, party)
+	
+	if customer:
+		return frappe.get_doc("Customer", customer)
 
 	else:
-		if not cart_settings.enabled:
-			return None
 		customer = frappe.new_doc("Customer")
 		fullname = get_fullname(user)
 		customer.update({
@@ -317,7 +300,7 @@ def get_party(user=None):
 			"customer_group": get_shopping_cart_settings().default_customer_group,
 			"territory": get_root_of("Territory")
 		})
-
+		
 		if debtors_account:
 			customer.update({
 				"accounts": [{
@@ -325,7 +308,7 @@ def get_party(user=None):
 					"account": debtors_account
 				}]
 			})
-
+		
 		customer.flags.ignore_mandatory = True
 		customer.insert(ignore_permissions=True)
 
@@ -343,12 +326,12 @@ def get_party(user=None):
 def get_debtors_account(cart_settings):
 	payment_gateway_account_currency = \
 		frappe.get_doc("Payment Gateway Account", cart_settings.payment_gateway_account).currency
-
+	
 	account_name = _("Debtors ({0})".format(payment_gateway_account_currency))
-
+	
 	debtors_account_name = get_account_name("Receivable", "Asset", is_group=0,\
 		account_currency=payment_gateway_account_currency, company=cart_settings.company)
-
+	
 	if not debtors_account_name:
 		debtors_account = frappe.get_doc({
 			"doctype": "Account",
@@ -357,21 +340,18 @@ def get_debtors_account(cart_settings):
 			"is_group": 0,
 			"parent_account": get_account_name(root_type="Asset", is_group=1, company=cart_settings.company),
 			"account_name": account_name,
-			"currency": payment_gateway_account_currency
+			"currency": payment_gateway_account_currency	
 		}).insert(ignore_permissions=True)
-
+		
 		return debtors_account.name
-
+		
 	else:
 		return debtors_account_name
-
+		
 
 def get_address_docs(doctype=None, txt=None, filters=None, limit_start=0, limit_page_length=20, party=None):
 	if not party:
-		party = get_party()
-
-	if not party:
-		return []
+		party = get_customer()
 
 	address_docs = frappe.db.sql("""select * from `tabAddress`
 		where `{0}`=%s order by name limit {1}, {2}""".format(party.doctype.lower(),
@@ -391,7 +371,7 @@ def set_customer_in_address(doc, method=None):
 
 	if not doc.flags.linked and (frappe.db.get_value("User", frappe.session.user, "user_type") == "Website User"):
 		# creates a customer if one does not exist
-		get_party()
+		get_customer()
 		doc.link_address()
 
 @frappe.whitelist()
@@ -457,6 +437,3 @@ def get_address_territory(address_name):
 				break
 
 	return territory
-
-def show_terms(doc):
-	return doc.tc_name

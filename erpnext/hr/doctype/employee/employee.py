@@ -4,7 +4,7 @@
 from __future__ import unicode_literals
 import frappe
 
-from frappe.utils import getdate, validate_email_add, today, add_years
+from frappe.utils import getdate, validate_email_add, today
 from frappe.model.naming import make_autoname
 from frappe import throw, _
 import frappe.permissions
@@ -18,6 +18,10 @@ class EmployeeUserDisabledError(frappe.ValidationError):
 
 
 class Employee(Document):
+	def onload(self):
+		self.get("__onload").salary_structure_exists = frappe.db.get_value("Salary Structure",
+				{"employee": self.name, "is_active": "Yes", "docstatus": ["!=", 2]})
+
 	def autoname(self):
 		naming_method = frappe.db.get_value("HR Settings", None, "emp_created_by")
 		if not naming_method:
@@ -129,11 +133,11 @@ class Employee(Document):
 	def validate_for_enabled_user_id(self):
 		if not self.status == 'Active':
 			return
-		enabled = frappe.db.get_value("User", self.user_id, "enabled")
-		if enabled is None:
-			frappe.throw(_("User {0} does not exist").format(self.user_id))
-		if enabled == 0:
-			frappe.throw(_("User {0} is disabled").format(self.user_id), EmployeeUserDisabledError)
+		enabled = frappe.db.sql("""select name from `tabUser` where
+			name=%s and enabled=1""", self.user_id)
+		if not enabled:
+			throw(_("User {0} is disabled").format(
+				self.user_id), EmployeeUserDisabledError)
 
 	def validate_duplicate_user_id(self):
 		employee = frappe.db.sql_list("""select name from `tabEmployee` where
@@ -154,13 +158,6 @@ class Employee(Document):
 	def on_trash(self):
 		delete_events(self.doctype, self.name)
 
-def get_timeline_data(doctype, name):
-	'''Return timeline for attendance'''
-	return dict(frappe.db.sql('''select unix_timestamp(att_date), count(*)
-		from `tabAttendance` where employee=%s
-			and att_date > date_sub(curdate(), interval 1 year)
-			and status in ('Present', 'Half Day')
-			group by att_date''', name))
 
 @frappe.whitelist()
 def get_retirement_date(date_of_birth=None):
@@ -168,8 +165,7 @@ def get_retirement_date(date_of_birth=None):
 	ret = {}
 	if date_of_birth:
 		try:
-			retirement_age = int(frappe.db.get_single_value("HR Settings", "retirement_age") or 60)
-			dt = add_years(getdate(date_of_birth),retirement_age)
+			dt = getdate(date_of_birth) + datetime.timedelta(21915)
 			ret = {'date_of_retirement': dt.strftime('%Y-%m-%d')}
 		except ValueError:
 			# invalid date
@@ -177,6 +173,19 @@ def get_retirement_date(date_of_birth=None):
 
 	return ret
 
+
+@frappe.whitelist()
+def make_salary_structure(source_name, target=None):
+	target = get_mapped_doc("Employee", source_name, {
+		"Employee": {
+			"doctype": "Salary Structure",
+			"field_map": {
+				"name": "employee",
+			}
+		}
+	})
+	target.make_earn_ded_table()
+	return target
 
 def validate_employee_role(doc, method):
 	# called via User hook
@@ -209,7 +218,8 @@ def send_birthday_reminders():
 			frappe.sendmail(recipients=filter(lambda u: u not in (e.company_email, e.personal_email, e.user_id), users),
 				subject=_("Birthday Reminder for {0}").format(e.employee_name),
 				message=_("""Today is {0}'s birthday!""").format(e.employee_name),
-				reply_to=e.company_email or e.personal_email or e.user_id)
+				reply_to=e.company_email or e.personal_email or e.user_id,
+				bulk=True)
 
 def get_employees_who_are_born_today():
 	"""Get Employee properties whose birthday is today."""
@@ -219,17 +229,13 @@ def get_employees_who_are_born_today():
 		and status = 'Active'""", {"date": today()}, as_dict=True)
 
 def get_holiday_list_for_employee(employee, raise_exception=True):
-	if employee:
-		holiday_list, company = frappe.db.get_value("Employee", employee, ["holiday_list", "company"])
-	else:
-		holiday_list=''
-		company=frappe.db.get_value("Global Defaults", None, "default_company")
+	holiday_list, company = frappe.db.get_value("Employee", employee, ["holiday_list", "company"])
 
 	if not holiday_list:
 		holiday_list = frappe.db.get_value("Company", company, "default_holiday_list")
 
 	if not holiday_list and raise_exception:
-		frappe.throw(_('Please set a default Holiday List for Employee {0} or Company {1}').format(employee, company))
+		frappe.throw(_('Please set a default Holiday List for Employee {0} or Company {0}').format(employee, company))
 
 	return holiday_list
 

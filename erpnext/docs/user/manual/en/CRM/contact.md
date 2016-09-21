@@ -1,6 +1,7 @@
 # Contact and Address
 
-Contacts do not need to be linked to another document, they can be stand alone.  You can even create a contact with only a first name, not linked to any other document or party (Customer/Supplier).
+Contacts are not necessarily linked to another document. They can be stand alone, just a Contact with a First Name not linked to any other document or 
+Contacts can be linked to a Party, that is either a Customer or a Supplier.
 
 The Contact_ID is automatically created:
 
@@ -35,7 +36,7 @@ Import Tool.
 
 ### Address Titles
 
-The Address Title (Name of person or organization that this address belongs to) is a free format unlinked field. The ID is automatically created from the Address Title and Address Type. (AddressTitle-AddressType).
+The Address Title (Name of person or organization that this address belongs to) is a free format unlinked field. The ID is automatically created from the Address Title upper score Address Type. (AdressTitle-AddressType).
 
 ### Address Linking
 

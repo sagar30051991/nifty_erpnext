@@ -17,8 +17,7 @@ def get_filters_cond(doctype, filters, conditions):
 				if isinstance(f[1], basestring) and f[1][0] == '!':
 					flt.append([doctype, f[0], '!=', f[1][1:]])
 				else:
-					value = frappe.db.escape(f[1]) if isinstance(f[1], basestring) else f[1]
-					flt.append([doctype, f[0], '=', value])
+					flt.append([doctype, f[0], '=', f[1]])
 
 		query = DatabaseQuery(doctype)
 		query.filters = flt
@@ -86,9 +85,6 @@ def customer_query(doctype, txt, searchfield, start, page_len, filters):
 		fields = ["name", "customer_group", "territory"]
 	else:
 		fields = ["name", "customer_name", "customer_group", "territory"]
-		
-	meta = frappe.get_meta("Customer")
-	fields = fields + [f for f in meta.get_search_fields() if not f in fields]
 
 	fields = ", ".join(fields)
 
@@ -164,10 +160,10 @@ def tax_account_query(doctype, txt, searchfield, start, page_len, filters):
 
 	return tax_accounts
 
-def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=False):
+def item_query(doctype, txt, searchfield, start, page_len, filters):
 	conditions = []
 
-	return frappe.db.sql("""select tabItem.name, tabItem.item_group, tabItem.image,
+	return frappe.db.sql("""select tabItem.name,tabItem.item_group,
 		if(length(tabItem.item_name) > 40,
 			concat(substr(tabItem.item_name, 1, 40), "..."), item_name) as item_name,
 		if(length(tabItem.description) > 40, \
@@ -196,7 +192,7 @@ def item_query(doctype, txt, searchfield, start, page_len, filters, as_dict=Fals
 				"_txt": txt.replace("%", ""),
 				"start": start,
 				"page_len": page_len
-			}, as_dict=as_dict)
+			})
 
 def bom(doctype, txt, searchfield, start, page_len, filters):
 	conditions = []
@@ -213,11 +209,11 @@ def bom(doctype, txt, searchfield, start, page_len, filters):
 		limit %(start)s, %(page_len)s """.format(
 			fcond=get_filters_cond(doctype, filters, conditions),
 			mcond=get_match_cond(doctype),
-			key=frappe.db.escape(searchfield)),
+			key=frappe.db.escape(searchfield)), 
 		{
 			'txt': "%%%s%%" % frappe.db.escape(txt),
 			'_txt': txt.replace("%", ""),
-			'start': start,
+			'start': start, 
 			'page_len': page_len
 		})
 
@@ -345,27 +341,3 @@ def get_income_account(doctype, txt, searchfield, start, page_len, filters):
 				'txt': "%%%s%%" % frappe.db.escape(txt),
 				'company': filters.get("company", "")
 			})
-
-
-@frappe.whitelist()
-def get_expense_account(doctype, txt, searchfield, start, page_len, filters):
-	from erpnext.controllers.queries import get_match_cond
-
-	if not filters: filters = {}
-
-	condition = ""
-	if filters.get("company"):
-		condition += "and tabAccount.company = %(company)s"
-
-	return frappe.db.sql("""select tabAccount.name from `tabAccount`
-		where (tabAccount.report_type = "Profit and Loss"
-				or tabAccount.account_type in ("Expense Account", "Fixed Asset", "Temporary"))
-			and tabAccount.is_group=0
-			and tabAccount.docstatus!=2
-			and tabAccount.{key} LIKE %(txt)s
-			{condition} {match_condition}"""
-		.format(condition=condition, key=frappe.db.escape(searchfield),
-			match_condition=get_match_cond(doctype)), {
-			'company': filters.get("company", ""),
-			'txt': "%%%s%%" % frappe.db.escape(txt)
-		})

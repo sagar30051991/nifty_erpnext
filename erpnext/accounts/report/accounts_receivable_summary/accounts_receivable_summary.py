@@ -34,8 +34,7 @@ class AccountsReceivableSummary(ReceivablePayableReport):
 		columns.append({
 			"fieldname": "currency",
 			"label": _("Currency"),
-			"fieldtype": "Link",
-			"options": "Currency",
+			"fieldtype": "Data",
 			"width": 80
 		})
 

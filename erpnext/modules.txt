@@ -11,6 +11,3 @@ Support
 Utilities
 Shopping Cart
 Hub Node
-Portal
-Maintenance
-Schools

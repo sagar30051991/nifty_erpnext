@@ -40,12 +40,6 @@ def get_data():
 				},
 				{
 					"type": "report",
-					"name": "Minutes to First Response for Opportunity",
-					"doctype": "Opportunity",
-					"is_query_report": True
-				},
-				{
-					"type": "report",
 					"is_query_report": True,
 					"name": "Lead Details",
 					"doctype": "Lead"
@@ -70,6 +64,11 @@ def get_data():
 			"items": [
 				{
 					"type": "doctype",
+					"name": "Newsletter",
+					"description": _("Newsletters to contacts, leads."),
+				},
+				{
+					"type": "doctype",
 					"name": "Communication",
 					"description": _("Record of all communications of type email, phone, chat, visit, etc."),
 				},
@@ -85,28 +84,36 @@ def get_data():
 					"description": _("Sales campaigns."),
 				},
 				{
-					"type": "doctype",
+					"type": "page",
 					"label": _("Customer Group"),
-					"name": "Customer Group",
+					"name": "Sales Browser",
 					"icon": "icon-sitemap",
-					"link": "Tree/Customer Group",
+					"link": "Sales Browser/Customer Group",
 					"description": _("Manage Customer Group Tree."),
+					"doctype": "Customer Group",
 				},
 				{
-					"type": "doctype",
+					"type": "page",
 					"label": _("Territory"),
-					"name": "Territory",
+					"name": "Sales Browser",
 					"icon": "icon-sitemap",
-					"link": "Tree/Territory",
+					"link": "Sales Browser/Territory",
 					"description": _("Manage Territory Tree."),
+					"doctype": "Territory",
+				},
+				{
+					"type": "page",
+					"label": _("Sales Person"),
+					"name": "Sales Browser",
+					"icon": "icon-sitemap",
+					"link": "Sales Browser/Sales Person",
+					"description": _("Manage Sales Person Tree."),
+					"doctype": "Sales Person",
 				},
 				{
 					"type": "doctype",
-					"label": _("Sales Person"),
-					"name": "Sales Person",
-					"icon": "icon-sitemap",
-					"link": "Tree/Sales Person",
-					"description": _("Manage Sales Person Tree."),
+					"name": "Newsletter List",
+					"description": _("Newsletter Mailing List"),
 				},
 			]
 		},

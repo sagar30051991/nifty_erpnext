@@ -1,19 +1,15 @@
 {% extends "templates/web.html" %}
 
-{% block header %}<h1>{{ _("Products") }}</h1>{% endblock %}
+{% block header_actions %}
+{% include 'templates/includes/product_search_box.html' %}
+{% endblock %}
+
 {% block breadcrumbs %}
- <div class="page-breadcrumbs" data-html-block="breadcrumbs">
- 	<ul class="breadcrumb">
- 		<li>
- 			<span class="icon icon-angle-left"></span>
- 			<a href="/me">My Account</a>
- 		</li>
- 	</ul>
- </div>
+    {% include "templates/includes/breadcrumbs.html" %}
 {% endblock %}
 
 {% block page_content %}
-<div class="item-group-content" itemscope itemtype="http://schema.org/Product">
+<div class="item-group-content">
 	<div>
 		{% if slideshow %}<!-- slideshow -->
 		{% include "templates/includes/slideshow.html" %}
@@ -24,22 +20,34 @@
 	</div>
 	<div>
 		{% if items %}
-		<div id="search-list" {% if not products_as_list -%} class="row" {%- endif %}>
+		<div id="search-list" class="row">
 			{% for item in items %}
 				{{ item }}
 			{% endfor %}
 		</div>
-		<div class="text-center item-group-nav-buttons">
-			{% if frappe.form_dict.start|int > 0 %}
-			<a class="btn btn-default" href="/{{ pathname }}?start={{ frappe.form_dict.start|int - page_length }}">Prev</a>
-			{% endif %}
-			{% if items|length == page_length %}
-			<a class="btn btn-default" href="/{{ pathname }}?start={{ frappe.form_dict.start|int + page_length }}">Next</a>
-			{% endif %}
-		</div>
+			<div class="text-center">
+				{% if frappe.form_dict.start|int > 0 %}
+				<a class="btn btn-default" href="{{ pathname }}?start={{ frappe.form_dict.start|int - 24 }}">Prev</a>
+				{% endif %}
+				{% if items|length == 24 %}
+				<a class="btn btn-default" href="{{ pathname }}?start={{ frappe.form_dict.start|int + 24 }}">Next</a>
+				{% endif %}
+			</div>
 		{% else %}
 			<div class="text-muted">No items listed.</div>
 		{% endif %}
 	</div>
 </div>
+{% endblock %}
+
+{% block style %}
+<style>
+	.product-image.missing-image {
+		border: 1px dashed {{ theme.border_color or "#d1d8dd" }};
+	}
+
+	.product-image.missing-image .octicon {
+		color: {{ theme.border_color or "#d1d8dd" }};
+	}
+</style>
 {% endblock %}

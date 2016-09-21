@@ -12,14 +12,13 @@ You can create Custom Form, Fields, Scripts and can also create your own Apps
 to extend ERPNext functionality.
 
 ERPNext is Open Source under the GNU General Public Licence v3 and has been
-listed as one of the Best Open Source Softwares in the world by many online
+listed as one of the Best Open Source Softwares in the world by my online
 blogs."""
 
 docs_version = "6.x.x"
 splash_light_background = True
 
 def get_context(context):
-	context.brand_html = "ERPNext"
 	context.app.splash_light_background = True
 	context.top_bar_items = [
 		{"label": "User Manual", "url": context.docs_base_url + "/user/manual", "right": 1},

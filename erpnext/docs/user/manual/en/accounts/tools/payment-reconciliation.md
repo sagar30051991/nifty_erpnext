@@ -1,21 +1,24 @@
-In complex scenarios, especially in the capital goods industry, sometimes there is no direct link between payments and invoices. You send invoices to your Customers and your Customer sends you block payments or payments based on some schedule that is not linked to your invoices.
+Reconciliation is an accounting process used to compare two sets of records to
+ensure the figures are in agreement and are accurate. It is the key process
+used to determine whether the money leaving an account matches the amount
+spent, ensuring the two values are balanced at the end of the recording
+period. In Payment Reconciliation, the invoices are matched against the
+payments made to the bank. Thus if you have many payments which are not
+reconciled with their respective invoices, you can use the payment
+reconciliation tool.
 
-In such cases, you can use the Payment to Invoice Matching Tool.
+To use Payment Reconciliation Tool go to,
 
-> Accounts > Tools > Payment Reconciliation
-
-In this tool, you can select an account (your Customer’s account) and click on “Pull Payment Entries” and it will select all un-linked Payment Entry and Sales Invoices from that Customer.
-
-To cancel off some payments and invoices, select the Invoices and Journal Vouchers and click on “Reconcile”.
+Accounts > Tools > Payment Reconciliation
 
 <img class="screenshot" alt="Payment Reconciliation" src="{{docs_base_url}}/assets/img/accounts/payment-reconcile-tool.png">
 
 __Step 1:__ Select the Account against whom the payments need to be reconciled.
 
 __Step 2:__ Mention the Voucher Type, whether it is Purchase Invoice, Sales
-Invoice or Payment Entry.
+Invoice or Journal Entry.
 
-__Step 3:__ Select the Voucher Number and click on 'Get Unreconciled Entries'.  
+__Step 3:__ Select the Voucher Number and click on 'Get Unreconcilled Entries'.  
 
 * All the payment entries will be pulled into a table below.
 

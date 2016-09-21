@@ -22,8 +22,7 @@
     "parentfield": "items",
     "qty": 10,
     "rate": 50,
-    "uom": "_Test UOM",
-	"warehouse": "_Test Warehouse - _TC"
+    "uom": "_Test UOM"
    },
    {
     "amount": 750,
@@ -38,8 +37,7 @@
     "parentfield": "items",
     "qty": 5,
     "rate": 150,
-    "uom": "_Test UOM",
-	"warehouse": "_Test Warehouse - _TC"
+    "uom": "_Test UOM"
    }
   ],
   "grand_total": 0,

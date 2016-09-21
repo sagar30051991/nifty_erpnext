@@ -3,7 +3,7 @@
 
 from __future__ import unicode_literals
 import frappe
-from frappe.utils import flt, getdate, nowdate
+from frappe.utils import flt
 from frappe import _
 
 def execute(filters=None):
@@ -24,8 +24,16 @@ def execute(filters=None):
 	for d in data:
 		total_debit += flt(d.debit)
 		total_credit += flt(d.credit)
-		
-	amounts_not_reflected_in_system = get_amounts_not_reflected_in_system(filters)
+
+	amounts_not_reflected_in_system = frappe.db.sql("""
+		select sum(jvd.debit_in_account_currency - jvd.credit_in_account_currency)
+		from `tabJournal Entry Account` jvd, `tabJournal Entry` jv
+		where jvd.parent = jv.name and jv.docstatus=1 and jvd.account=%s
+		and jv.posting_date > %s and jv.clearance_date <= %s and ifnull(jv.is_opening, 'No') = 'No'
+		""", (filters["account"], filters["report_date"], filters["report_date"]))
+
+	amounts_not_reflected_in_system = flt(amounts_not_reflected_in_system[0][0]) \
+		if amounts_not_reflected_in_system else 0.0
 
 	bank_bal = flt(balance_as_per_system) - flt(total_debit) + flt(total_credit) \
 		+ amounts_not_reflected_in_system
@@ -34,7 +42,7 @@ def execute(filters=None):
 		get_balance_row(_("Bank Statement balance as per General Ledger"), balance_as_per_system, account_currency),
 		{},
 		{
-			"payment_entry": _("Outstanding Cheques and Deposits to clear"),
+			"journal_entry": _("Outstanding Cheques and Deposits to clear"),
 			"debit": total_debit,
 			"credit": total_credit,
 			"account_currency": account_currency
@@ -53,13 +61,13 @@ def get_columns():
 			"fieldname": "posting_date",
 			"label": _("Posting Date"),
 			"fieldtype": "Date",
-			"width": 90
+			"width": 100
 		},
 		{
-			"fieldname": "payment_entry",
-			"label": _("Payment Entry"),
-			"fieldtype": "Dynamic Link",
-			"options": "payment_document",
+			"fieldname": "journal_entry",
+			"label": _("Journal Entry"),
+			"fieldtype": "Link",
+			"options": "Journal Entry",
 			"width": 220
 		},
 		{
@@ -84,7 +92,7 @@ def get_columns():
 			"width": 200
 		},
 		{
-			"fieldname": "reference_no",
+			"fieldname": "reference",
 			"label": _("Reference"),
 			"fieldtype": "Data",
 			"width": 100
@@ -111,67 +119,31 @@ def get_columns():
 	]
 
 def get_entries(filters):
-	journal_entries = frappe.db.sql("""
-		select "Journal Entry" as payment_document, jv.posting_date, 
-			jv.name as payment_entry, jvd.debit_in_account_currency as debit, 
+	entries = frappe.db.sql("""select
+			jv.posting_date, jv.name as journal_entry, jvd.debit_in_account_currency as debit, 
 			jvd.credit_in_account_currency as credit, jvd.against_account, 
-			jv.cheque_no as reference_no, jv.cheque_date as ref_date, jv.clearance_date, jvd.account_currency
+			jv.cheque_no as reference, jv.cheque_date as ref_date, jv.clearance_date, jvd.account_currency
 		from
 			`tabJournal Entry Account` jvd, `tabJournal Entry` jv
 		where jvd.parent = jv.name and jv.docstatus=1
 			and jvd.account = %(account)s and jv.posting_date <= %(report_date)s
 			and ifnull(jv.clearance_date, '4000-01-01') > %(report_date)s
-			and ifnull(jv.is_opening, 'No') = 'No'""", filters, as_dict=1)
-			
-	payment_entries = frappe.db.sql("""
-		select 
-			"Payment Entry" as payment_document, name as payment_entry, 
-			reference_no, reference_date as ref_date, 
-			if(paid_to=%(account)s, received_amount, 0) as debit, 
-			if(paid_from=%(account)s, paid_amount, 0) as credit, 
-			posting_date, party as against_account, clearance_date,
-			if(paid_to=%(account)s, paid_to_account_currency, paid_from_account_currency) as account_currency
-		from `tabPayment Entry`
-		where
-			(paid_from=%(account)s or paid_to=%(account)s) and docstatus=1
-			and posting_date <= %(report_date)s
-			and ifnull(clearance_date, '4000-01-01') > %(report_date)s
-	""", filters, as_dict=1)
+			and ifnull(jv.is_opening, 'No') = 'No'
+		order by jv.posting_date DESC,jv.name DESC""", filters, as_dict=1)
 
-	return sorted(list(payment_entries)+list(journal_entries), 
-			key=lambda k: k['posting_date'] or getdate(nowdate()))
-			
-def get_amounts_not_reflected_in_system(filters):
-	je_amount = frappe.db.sql("""
-		select sum(jvd.debit_in_account_currency - jvd.credit_in_account_currency)
-		from `tabJournal Entry Account` jvd, `tabJournal Entry` jv
-		where jvd.parent = jv.name and jv.docstatus=1 and jvd.account=%(account)s
-		and jv.posting_date > %(report_date)s and jv.clearance_date <= %(report_date)s 
-		and ifnull(jv.is_opening, 'No') = 'No' """, filters)
-
-	je_amount = flt(je_amount[0][0]) if je_amount else 0.0
-	
-	pe_amount = frappe.db.sql("""
-		select sum(if(paid_from=%(account)s, paid_amount, received_amount))
-		from `tabPayment Entry`
-		where (paid_from=%(account)s or paid_to=%(account)s) and docstatus=1 
-		and posting_date > %(report_date)s and clearance_date <= %(report_date)s""", filters)
-
-	pe_amount = flt(pe_amount[0][0]) if pe_amount else 0.0
-	
-	return je_amount + pe_amount
+	return entries
 
 def get_balance_row(label, amount, account_currency):
 	if amount > 0:
 		return {
-			"payment_entry": label,
+			"journal_entry": label,
 			"debit": amount,
 			"credit": 0,
 			"account_currency": account_currency
 		}
 	else:
 		return {
-			"payment_entry": label,
+			"journal_entry": label,
 			"debit": 0,
 			"credit": abs(amount),
 			"account_currency": account_currency

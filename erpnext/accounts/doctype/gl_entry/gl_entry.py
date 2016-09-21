@@ -38,18 +38,15 @@ class GLEntry(Document):
 					self.against_voucher)
 
 	def check_mandatory(self):
-		mandatory = ['account','voucher_type','voucher_no','company']
+		mandatory = ['account','remarks','voucher_type','voucher_no','company']
 		for k in mandatory:
 			if not self.get(k):
-				frappe.throw(_("{0} is required").format(_(self.meta.get_label(k))))
+				frappe.throw(_("{0} is required").format(self.meta.get_label(k)))
 
 		account_type = frappe.db.get_value("Account", self.account, "account_type")
-		if not (self.party_type and self.party):
-			if account_type == "Receivable":
-				frappe.throw(_("Customer is required against Receivable account {0}").format(self.account))
-			elif account_type == "Payable":
-				frappe.throw(_("Supplier is required against Payable account {0}").format(self.account))
-				
+		if account_type in ["Receivable", "Payable"] and not (self.party_type and self.party):
+			frappe.throw(_("Party Type and Party is required for Receivable / Payable account {0}").format(self.account))
+
 		# Zero value transaction is not allowed
 		if not (flt(self.debit) or flt(self.credit)):
 			frappe.throw(_("Either debit or credit amount is required for {0}").format(self.account))
@@ -57,13 +54,9 @@ class GLEntry(Document):
 	def pl_must_have_cost_center(self):
 		if frappe.db.get_value("Account", self.account, "report_type") == "Profit and Loss":
 			if not self.cost_center and self.voucher_type != 'Period Closing Voucher':
-				frappe.throw(_("Cost Center is required for 'Profit and Loss' account {0}. Please set up a default Cost Center for the Company.")
-					.format(self.account))
-		else:
-			if self.cost_center:
-				self.cost_center = None
-			if self.project:
-				self.project = None
+				frappe.throw(_("Cost Center is required for 'Profit and Loss' account {0}").format(self.account))
+		elif self.cost_center:
+			self.cost_center = None
 
 	def check_pl_account(self):
 		if self.is_opening=='Yes' and \
@@ -184,8 +177,8 @@ def update_outstanding_amt(account, party_type, party, against_voucher_type, aga
 
 	# Update outstanding amt on against voucher
 	if against_voucher_type in ["Sales Invoice", "Purchase Invoice"]:
-		ref_doc = frappe.get_doc(against_voucher_type, against_voucher)
-		ref_doc.db_set('outstanding_amount', bal)
+		frappe.db.sql("update `tab%s` set outstanding_amount=%s where name=%s" %
+			(against_voucher_type, '%s', '%s'),	(bal, against_voucher))
 
 def validate_frozen_account(account, adv_adj=None):
 	frozen_account = frappe.db.get_value("Account", account, "freeze_account")

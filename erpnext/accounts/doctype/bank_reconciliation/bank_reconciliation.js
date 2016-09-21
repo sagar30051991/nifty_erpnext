@@ -3,15 +3,11 @@
 
 frappe.ui.form.on("Bank Reconciliation", {
 	setup: function(frm) {
-		frm.get_docfield("payment_entries").allow_bulk_edit = 1;
+		frm.get_docfield("journal_entries").allow_bulk_edit = 1;
 		frm.add_fetch("bank_account", "account_currency", "account_currency");
 	},
 
 	onload: function(frm) {
-		var default_bank_account =  locals[":Company"][frappe.defaults.get_user_default("Company")]["default_bank_account"];
-
-		frm.set_value("bank_account", default_bank_account);
-
 		frm.set_query("bank_account", function() {
 			return {
 				"filters": {
@@ -31,21 +27,16 @@ frappe.ui.form.on("Bank Reconciliation", {
 
 	update_clearance_date: function(frm) {
 		return frappe.call({
-			method: "update_clearance_date",
-			doc: frm.doc,
-			callback: function(r, rt) {
-				frm.refresh_field("payment_entries");
-				frm.refresh_fields();
-			}
+			method: "update_details",
+			doc: frm.doc
 		});
 	},
-	get_payment_entries: function(frm) {
+	get_relevant_entries: function(frm) {
 		return frappe.call({
-			method: "get_payment_entries",
+			method: "get_details",
 			doc: frm.doc,
 			callback: function(r, rt) {
-				frm.refresh_field("payment_entries");
-				frm.refresh_fields();
+				frm.refresh()
 			}
 		});
 	}

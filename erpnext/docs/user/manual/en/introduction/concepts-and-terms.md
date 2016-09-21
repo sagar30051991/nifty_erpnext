@@ -145,19 +145,13 @@ A classification of Customers, usually based on market segment.
 A person who could be a future source of business. A Lead may generate
 Opportunities. (from: “may lead to a sale”).
 
-> CRM > Lead
+> Selling > Lead
 
 #### Opportunity
 
 A potential sale. (from: “opportunity for a business”).
 
-> CRM > Opportunity
-
-#### Quotation
-
-Customer's request to price an item or service.
-
-> Selling > Quotation
+> Selling > Opportunity
 
 #### Sales Order
 

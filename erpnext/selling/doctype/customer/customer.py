@@ -10,8 +10,7 @@ from frappe.utils import flt, cint, cstr
 from frappe.desk.reportview import build_match_conditions
 from erpnext.utilities.transaction_base import TransactionBase
 from erpnext.utilities.address_and_contact import load_address_and_contact
-from erpnext.accounts.party import validate_party_accounts, get_timeline_data # keep this
-from erpnext.accounts.party_status import get_party_status
+from erpnext.accounts.party import validate_party_accounts
 
 class Customer(TransactionBase):
 	def get_feed(self):
@@ -20,26 +19,6 @@ class Customer(TransactionBase):
 	def onload(self):
 		"""Load address and contacts in `__onload`"""
 		load_address_and_contact(self, "customer")
-		self.load_dashboard_info()
-
-	def load_dashboard_info(self):
-		billing_this_year = frappe.db.sql("""
-			select sum(debit_in_account_currency) - sum(credit_in_account_currency)
-			from `tabGL Entry`
-			where voucher_type='Sales Invoice' and party_type = 'Customer'
-				and party=%s and fiscal_year = %s""",
-			(self.name, frappe.db.get_default("fiscal_year")))
-
-		total_unpaid = frappe.db.sql("""select sum(outstanding_amount)
-			from `tabSales Invoice`
-			where customer=%s and docstatus = 1""", self.name)
-
-		info = {}
-		info["billing_this_year"] = billing_this_year[0][0] if billing_this_year else 0
-		info["total_unpaid"] = total_unpaid[0][0] if total_unpaid else 0
-
-		self.set_onload('dashboard_info', info)
-
 
 	def autoname(self):
 		cust_master_name = frappe.defaults.get_global_default('cust_master_name')
@@ -60,37 +39,13 @@ class Customer(TransactionBase):
 
 		return self.customer_name
 
-	def after_insert(self):
-		'''If customer created from Lead, update customer id in quotations, opportunities'''
-		self.update_lead_status()
-
 	def validate(self):
 		self.flags.is_new_doc = self.is_new()
-		self.flags.old_lead = self.lead_name
 		validate_party_accounts(self)
-		self.status = get_party_status(self)
-
-	def on_update(self):
-		self.validate_name_with_customer_group()
-
-		if self.flags.old_lead != self.lead_name:
-			self.update_lead_status()
-
-		self.update_address()
-		self.update_contact()
-
-		if self.flags.is_new_doc:
-			self.create_lead_address_contact()
 
 	def update_lead_status(self):
-		'''If Customer created from Lead, update lead status to "Converted"
-		update Customer link in Quotation, Opportunity'''
 		if self.lead_name:
-		 	frappe.db.set_value('Lead', self.lead_name, 'status', 'Converted', update_modified=False)
-
-			for doctype in ('Opportunity', 'Quotation'):
-				for d in frappe.get_all(doctype, {'lead': self.lead_name}):
-					frappe.db.set_value(doctype, d.name, 'customer', self.name, update_modified=False)
+			frappe.db.sql("update `tabLead` set status='Converted' where name = %s", self.lead_name)
 
 	def update_address(self):
 		frappe.db.sql("""update `tabAddress` set customer_name=%s, modified=NOW()
@@ -120,6 +75,16 @@ class Customer(TransactionBase):
 			c.autoname()
 			if not frappe.db.exists("Contact", c.name):
 				c.insert()
+
+	def on_update(self):
+		self.validate_name_with_customer_group()
+
+		self.update_lead_status()
+		self.update_address()
+		self.update_contact()
+
+		if self.flags.is_new_doc:
+			self.create_lead_address_contact()
 
 	def validate_name_with_customer_group(self):
 		if frappe.db.exists("Customer Group", self.name):
@@ -159,6 +124,33 @@ class Customer(TransactionBase):
 		frappe.db.sql("""update `tabAddress` set address_title=%(newdn)s
 			{set_field} where customer=%(newdn)s"""\
 			.format(set_field=set_field), ({"newdn": newdn}))
+
+@frappe.whitelist()
+def get_dashboard_info(customer):
+	if not frappe.has_permission("Customer", "read", customer):
+		frappe.msgprint(_("Not permitted"), raise_exception=True)
+
+	out = {}
+	for doctype in ["Opportunity", "Quotation", "Sales Order", "Delivery Note",
+		"Sales Invoice", "Project"]:
+		out[doctype] = frappe.db.get_value(doctype,
+			{"customer": customer, "docstatus": ["!=", 2] }, "count(*)")
+
+	billing_this_year = frappe.db.sql("""
+		select sum(debit_in_account_currency) - sum(credit_in_account_currency)
+		from `tabGL Entry`
+		where voucher_type='Sales Invoice' and party_type = 'Customer'
+			and party=%s and fiscal_year = %s""",
+		(customer, frappe.db.get_default("fiscal_year")))
+
+	total_unpaid = frappe.db.sql("""select sum(outstanding_amount)
+		from `tabSales Invoice`
+		where customer=%s and docstatus = 1""", customer)
+
+	out["billing_this_year"] = billing_this_year[0][0] if billing_this_year else 0
+	out["total_unpaid"] = total_unpaid[0][0] if total_unpaid else 0
+
+	return out
 
 
 def get_customer_list(doctype, txt, searchfield, start, page_len, filters):

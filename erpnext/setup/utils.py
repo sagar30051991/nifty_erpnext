@@ -43,15 +43,13 @@ def before_tests():
 			"company_abbr"		:"WP",
 			"industry"			:"Manufacturing",
 			"country"			:"United States",
-			"fy_start_date"		:"2011-01-01",
-			"fy_end_date"		:"2011-12-31",
+			"fy_start_date"		:"2014-01-01",
+			"fy_end_date"		:"2014-12-31",
 			"language"			:"english",
 			"company_tagline"	:"Testing",
 			"email"				:"test@erpnext.com",
 			"password"			:"test",
-			"chart_of_accounts" : "Standard",
-			"domain"			: "Manufacturing",
-			
+			"chart_of_accounts" : "Standard"
 		})
 
 	frappe.db.sql("delete from `tabLeave Allocation`")
@@ -65,9 +63,6 @@ def before_tests():
 
 @frappe.whitelist()
 def get_exchange_rate(from_currency, to_currency):
-	if not (from_currency and to_currency):
-		return
-	
 	if from_currency == to_currency:
 		return 1
 	

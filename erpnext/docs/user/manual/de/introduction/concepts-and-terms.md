@@ -151,7 +151,7 @@ Ein logisches Lager zu dem Lagerbuchungen erstellt werden.
 > Lagerbestand > Dokumente > Lager
 
 #### Lagerbuchung
-Materialübertrag von einem Lager, in ein Lager oder zwischen mehreren Lagern.
+Materialübertrag von einem Lager, in ein Lager oder zwischen mehreren Lägern.
 
 > Lagerbestand > Dokumente > Lagerbuchung
 

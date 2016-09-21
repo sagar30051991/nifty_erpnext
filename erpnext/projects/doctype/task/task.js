@@ -16,10 +16,10 @@ frappe.ui.form.on("Task", {
 
 
 		if(!doc.__islocal) {
-			if(frappe.model.can_read("Timesheet")) {
-				frm.add_custom_button(__("Timesheet"), function() {
+			if(frappe.model.can_read("Time Log")) {
+				frm.add_custom_button(__("Time Logs"), function() {
 					frappe.route_options = {"project": doc.project, "task": doc.name}
-					frappe.set_route("List", "Timesheet");
+					frappe.set_route("List", "Time Log");
 				}, __("View"), true);
 			}
 			if(frappe.model.can_read("Expense Claim")) {
@@ -34,12 +34,12 @@ frappe.ui.form.on("Task", {
 					frm.add_custom_button(__("Close"), function() {
 						frm.set_value("status", "Closed");
 						frm.save();
-					});
+					}, __("Status"));
 				} else {
 					frm.add_custom_button(__("Reopen"), function() {
 						frm.set_value("status", "Open");
 						frm.save();
-					});
+					}, __("Status"));
 				}
 			}
 		}

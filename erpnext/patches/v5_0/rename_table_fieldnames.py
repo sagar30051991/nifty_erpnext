@@ -86,6 +86,9 @@ rename_map = {
 	"Bank Reconciliation": [
 		["entries", "journal_entries"]
 	],
+	"Cost Center": [
+		["budget_details", "budgets"]
+	],
 	"C-Form": [
 		["invoice_details", "invoices"]
 	],
@@ -182,8 +185,8 @@ rename_map = {
 	"Territory": [
 		["target_details", "targets"]
 	],
-	"Time Sheet": [
-		["time_sheet_details", "time_logs"]
+	"Time Log Batch": [
+		["time_log_batch_details", "time_logs"]
 	],
 	"Workstation": [
 		["workstation_operation_hours", "working_hours"]
@@ -219,7 +222,6 @@ def execute():
 	frappe.reload_doc("manufacturing", "doctype", "production_order_operation")
 	frappe.reload_doc("manufacturing", "doctype", "workstation_working_hour")
 	frappe.reload_doc("stock", "doctype", "item_variant")
-	frappe.reload_doc("hr", "doctype", "salary_detail")
 	frappe.reload_doc("accounts", "doctype", "party_account")
 	frappe.reload_doc("accounts", "doctype", "fiscal_year_company")
 

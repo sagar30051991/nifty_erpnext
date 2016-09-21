@@ -1,6 +1,7 @@
 // Copyright (c) 2015, Frappe Technologies Pvt. Ltd. and Contributors
 // License: GNU General Public License v3. See license.txt
 
+frappe.require("assets/erpnext/js/stock_grid_report.js");
 
 erpnext.StockAnalytics = erpnext.StockGridReport.extend({
 	init: function(wrapper, opts) {
@@ -78,7 +79,7 @@ erpnext.StockAnalytics = erpnext.StockGridReport.extend({
 		this.trigger_refresh_on_change(["value_or_qty", "brand", "warehouse", "range"]);
 
 		this.show_zero_check();
-		this.setup_chart_check();
+		this.setup_plot_check();
 	},
 	init_filter_values: function() {
 		this._super();
@@ -198,6 +199,9 @@ erpnext.StockAnalytics = erpnext.StockGridReport.extend({
 			}
 		});
 	},
+	get_plot_points: function(item, col, idx) {
+		return [[dateutil.user_to_obj(col.name).getTime(), item[col.field]]]
+	},
 	show_stock_ledger: function(item_code) {
 		frappe.route_options = {
 			item_code: item_code,
@@ -207,4 +211,3 @@ erpnext.StockAnalytics = erpnext.StockGridReport.extend({
 		frappe.set_route("query-report", "Stock Ledger");
 	}
 });
-

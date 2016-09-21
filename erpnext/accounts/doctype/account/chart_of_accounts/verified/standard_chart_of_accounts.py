@@ -41,26 +41,17 @@ def get():
 	            _("Capital Equipments"): {
 	                "account_type": "Fixed Asset"
 	            },
-	            _("Electronic Equipments"): {
+	            _("Computers"): {
 	                "account_type": "Fixed Asset"
 	            },
-	            _("Furnitures and Fixtures"): {
+	            _("Furniture and Fixture"): {
 	                "account_type": "Fixed Asset"
 	            },
 	            _("Office Equipments"): {
 	                "account_type": "Fixed Asset"
 	            },
-	            _("Plants and Machineries"): {
+	            _("Plant and Machinery"): {
 	                "account_type": "Fixed Asset"
-	            },
-				_("Buildings"): {
-					"account_type": "Fixed Asset"
-				},
-				_("Softwares"): {
-					"account_type": "Fixed Asset"
-				},
-	            _("Accumulated Depreciation"): {
-	            	"account_type": "Accumulated Depreciation"
 	            }
 	        },
 	        _("Investments"): {
@@ -77,60 +68,92 @@ def get():
 	        _("Direct Expenses"): {
 	            _("Stock Expenses"): {
 	                _("Cost of Goods Sold"): {
-	                    "account_type": "Cost of Goods Sold"
+	                    "account_type": "Expense Account"
 	                },
 	                _("Expenses Included In Valuation"): {
 	                    "account_type": "Expenses Included In Valuation"
 	                },
 	                _("Stock Adjustment"): {
 	                    "account_type": "Stock Adjustment"
-	                }
+	                },
+	                "account_type": "Expense Account"
 	            },
+	            "account_type": "Expense Account"
 	        },
 	        _("Indirect Expenses"): {
-	            _("Administrative Expenses"): {},
-	            _("Commission on Sales"): {},
-	            _("Depreciation"): {
-	                "account_type": "Depreciation"
+	            _("Administrative Expenses"): {
+	                "account_type": "Expense Account"
 	            },
-	            _("Entertainment Expenses"): {},
+	            _("Commission on Sales"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Depreciation"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Entertainment Expenses"): {
+	                "account_type": "Expense Account"
+	            },
 	            _("Freight and Forwarding Charges"): {
 	                "account_type": "Chargeable"
 	            },
-	            _("Legal Expenses"): {},
+	            _("Legal Expenses"): {
+	                "account_type": "Expense Account"
+	            },
 	            _("Marketing Expenses"): {
 	                "account_type": "Chargeable"
 	            },
 	            _("Miscellaneous Expenses"): {
 	                "account_type": "Chargeable"
 	            },
-	            _("Office Maintenance Expenses"): {},
-	            _("Office Rent"): {},
-	            _("Postal Expenses"): {},
-	            _("Print and Stationary"): {},
+	            _("Office Maintenance Expenses"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Office Rent"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Postal Expenses"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Print and Stationary"): {
+	                "account_type": "Expense Account"
+	            },
 	            _("Round Off"): {
 	                "account_type": "Round Off"
 	            },
-	            _("Salary"): {},
-	            _("Sales Expenses"): {},
-	            _("Telephone Expenses"): {},
-	            _("Travel Expenses"): {},
-	            _("Utility Expenses"): {},
-				_("Write Off"): {},
-				_("Exchange Gain/Loss"): {},
-				_("Gain/Loss on Asset Disposal"): {}
+	            _("Salary"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Sales Expenses"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Telephone Expenses"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Travel Expenses"): {
+	                "account_type": "Expense Account"
+	            },
+	            _("Utility Expenses"): {
+	                "account_type": "Expense Account"
+	            },
+	            "account_type": "Expense Account"
 	        },
 			"root_type": "Expense"
 	    },
 	    _("Income"): {
 	        _("Direct Income"): {
-	            _("Sales"): {},
-	            _("Service"): {}
+	            _("Sales"): {
+	                "account_type": "Income Account"
+	            },
+	            _("Service"): {
+	                "account_type": "Income Account"
+	            },
+	            "account_type": "Income Account"
 	        },
 	        _("Indirect Income"): {
+	            "account_type": "Income Account",
 				"is_group": 1
 	        },
-	        "root_type": "Income"
+			"root_type": "Income"
 	    },
 	    _("Source of Funds (Liabilities)"): {
 	        _("Current Liabilities"): {

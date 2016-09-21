@@ -24,6 +24,12 @@ erpnext.hr.EmployeeController = frappe.ui.form.Controller.extend({
 	refresh: function() {
 		var me = this;
 		erpnext.toggle_naming_series();
+		if(!this.frm.doc.__islocal && this.frm.doc.__onload &&
+			!this.frm.doc.__onload.salary_structure_exists) {
+				cur_frm.add_custom_button(__('Salary Structure'), function() {
+					me.make_salary_structure(this); }, __("Make"));
+				cur_frm.page.set_inner_btn_group_as_primary(__("Make"));
+		}
 	},
 
 	date_of_birth: function() {
@@ -40,6 +46,13 @@ erpnext.hr.EmployeeController = frappe.ui.form.Controller.extend({
 				"Ms": "Female"
 			}[this.frm.doc.salutation]);
 		}
+	},
+
+	make_salary_structure: function(btn) {
+		frappe.model.open_mapped_doc({
+			method: "erpnext.hr.doctype.employee.employee.make_salary_structure",
+			frm: cur_frm
+		});
 	}
 });
 cur_frm.cscript = new erpnext.hr.EmployeeController({frm: cur_frm});

@@ -23,8 +23,8 @@ def get_data():
 				},
 				{
 					"type": "doctype",
-					"name": "Timesheet",
-					"description": _("Time Sheet for manufacturing."),
+					"name": "Time Log",
+					"description": _("Time Logs for manufacturing."),
 				},
 
 			]
@@ -39,12 +39,12 @@ def get_data():
 					"label": _("Bill of Materials")
 				},
 				{
-					"type": "doctype",
-					"name": "BOM",
+					"type": "page",
+					"name": "bom-browser",
 					"icon": "icon-sitemap",
 					"label": _("BOM Browser"),
 					"description": _("Tree of Bill of Materials"),
-					"link": "Tree/BOM",
+					"doctype": "BOM"
 				},
 				{
 					"type": "doctype",

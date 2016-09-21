@@ -55,16 +55,13 @@ class Issue(Document):
 
 def get_list_context(context=None):
 	return {
-		"title": _("Issues"),
+		"title": _("My Issues"),
 		"get_list": get_issue_list,
-		"row_template": "templates/includes/issue_row.html",
-		"show_sidebar": True,
-		"show_search": True,
-		'no_breadcrumbs': True
+		"row_template": "templates/includes/issue_row.html"
 	}
 
 def get_issue_list(doctype, txt, filters, limit_start, limit_page_length=20):
-	from frappe.www.list import get_list
+	from frappe.templates.pages.list import get_list
 	user = frappe.session.user
 	ignore_permissions = False
 	if is_website_user():

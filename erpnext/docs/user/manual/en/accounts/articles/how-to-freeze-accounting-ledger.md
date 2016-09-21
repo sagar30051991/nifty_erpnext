@@ -1,36 +1,28 @@
 #How To Freeze Accounting Ledger?
 
-If you want to discontinue using specific Account, you can freeze it.
+You can freeze any accounting ledger in ERPNext. So that frozen accounting ledger became unsearchable in accounting transaction. Follow below step to understand the process.
 
->Account can be Frozen by the User having specific Role. This Role for set in the Account Settings, in the field "Role Allowed to Set Frozen Accounts & Edit Frozen Entries".
+#### 1. Set Frozen Accounts Modifier
 
-Please check following steps to freeze an Account from the Chart of Accounts master.
+To set frozen accounts modifier go to `Accounts > Setup > Accounts Setting`
 
-####Step 1: Chart of Accounts
+Search and select Role under Frozen Accounts Modifier field and save the Account Settings form. 
+   
+![Account Settings]({{docs_base_url}}/assets/img/articles/Selection_001f1e2ff.png)
 
-To edit an Account, go to Chart of Accounts:
+#### 2. Edit Accounting Ledger.
 
-`Explore > Accounts > Chart of Accounts`
+To edit accounting ledger go to `Accounts > Setup > Chart of Accounts`
 
-<img class="screenshot" alt="Freeze Account" src="{{docs_base_url}}/assets/img/articles/freeze-account-1.png">
+![Account Settings]({{docs_base_url}}/assets/img/articles/Selection_0027e4d09.png)
 
-Click on Account in which Frozen Date is to be updated.
+#### 3. Set Frozen Status of Ledger.
 
-####Step 2: Set Account as Frozen
+![Account Settings]({{docs_base_url}}/assets/img/articles/Selection_003bf981b.png)
 
-In the Account form, you will find a field called **Frozen**. Set value in this field as 'Yes'
+Set Frozen field status of ledger as 'Yes' and save the ledger form. On save this ledger will be frozen and you will became unable to search this ledger in accounting transactions. 
 
-<img class="screenshot" alt="Freeze Account" src="{{docs_base_url}}/assets/img/articles/freeze-account-2.png">
-
-####Step 3: Save
-
-After update Save an Account.  
-
-On saving, this Account will be frozen and will not be selectable in any accounting transaction.
-
-<div class ="well"> Note: In future, if you want to make an accounting transaction against this Account, then you can unfreeze this account by setting values in the Frozen field as 'No'.</div>
-
-
+<div class ="well"> Note: If you want to make accounting transaction against this ledger in the future, then that time again set frozen field status as 'No'.</div>
 
 
 <!-- markdown -->
